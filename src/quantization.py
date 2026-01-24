@@ -16,7 +16,11 @@ def apply_weight_sharing(model, bits=5):
         min_ = min(mat.data)
         max_ = max(mat.data)
         space = np.linspace(min_, max_, num=2**bits)
-        kmeans = KMeans(n_clusters=len(space), init=space.reshape(-1,1), n_init=1, precompute_distances=True, algorithm="full")
+        kmeans = KMeans(n_clusters=len(space),
+                        init=space.reshape(-1,1),
+                        n_init=1,
+                        # algorithm="full"
+                        )
         kmeans.fit(mat.data.reshape(-1,1))
         new_weight = kmeans.cluster_centers_[kmeans.labels_].reshape(-1)
         mat.data = new_weight

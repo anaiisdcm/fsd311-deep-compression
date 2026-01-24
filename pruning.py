@@ -9,9 +9,9 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
-from net.models import LeNet
-from net.quantization import apply_weight_sharing
-import util
+from src.models import LeNet
+from src.quantization import apply_weight_sharing
+import src.util
 
 os.makedirs('saves', exist_ok=True)
 
@@ -70,7 +70,7 @@ test_loader = torch.utils.data.DataLoader(
 model = LeNet(mask=True).to(device)
 
 print(model)
-util.print_model_parameters(model)
+src.util.print_model_parameters(model)
 
 # NOTE : `weight_decay` term denotes L2 regularization loss term
 optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.0001)
@@ -125,17 +125,17 @@ def test():
 print("--- Initial training ---")
 train(args.epochs)
 accuracy = test()
-util.log(args.log, f"initial_accuracy {accuracy}")
+src.util.log(args.log, f"initial_accuracy {accuracy}")
 torch.save(model, f"saves/initial_model.ptmodel")
 print("--- Before pruning ---")
-util.print_nonzeros(model)
+src.util.print_nonzeros(model)
 
 # Pruning
 model.prune_by_std(args.sensitivity)
 accuracy = test()
-util.log(args.log, f"accuracy_after_pruning {accuracy}")
+src.util.log(args.log, f"accuracy_after_pruning {accuracy}")
 print("--- After pruning ---")
-util.print_nonzeros(model)
+src.util.print_nonzeros(model)
 
 # Retrain
 print("--- Retraining ---")
@@ -143,7 +143,7 @@ optimizer.load_state_dict(initial_optimizer_state_dict) # Reset the optimizer
 train(args.epochs)
 torch.save(model, f"saves/model_after_retraining.ptmodel")
 accuracy = test()
-util.log(args.log, f"accuracy_after_retraining {accuracy}")
+src.util.log(args.log, f"accuracy_after_retraining {accuracy}")
 
 print("--- After Retraining ---")
-util.print_nonzeros(model)
+src.util.print_nonzeros(model)
