@@ -21,12 +21,12 @@ use_cuda = not args.no_cuda and torch.cuda.is_available()
 # Define the model
 model = torch.load(args.model, weights_only=False)
 print('Accuracy before weight sharing')
-src.util.test(model, use_cuda)
+src.util.test(model, modelname='LeNet', use_cuda=use_cuda)
 
 # Weight sharing
 apply_weight_sharing(model)
 print('Accuracy after weight sharing')
-src.util.test(model, use_cuda)
+src.util.test(model, modelname='LeNet', use_cuda=use_cuda)
 
 # Save the new model
 os.makedirs('saves', exist_ok=True)

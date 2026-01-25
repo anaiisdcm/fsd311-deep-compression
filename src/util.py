@@ -36,7 +36,7 @@ def print_nonzeros(model):
     print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
 
 
-def test(model, modelname, use_cuda=True):
+def test(model, modelname='LeNet', use_cuda=True):
     kwargs = {'num_workers': 5, 'pin_memory': True} if use_cuda else {}
     device = torch.device("cuda" if use_cuda else 'cpu')
 

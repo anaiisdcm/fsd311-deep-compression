@@ -27,7 +27,7 @@ else:
 model = LeNet(mask=True).to(device)
 huffman_decode_model(model, directory='encodings/')
 
-src.util.test(model, use_cuda)
+src.util.test(model, modelname='LeNet', use_cuda=use_cuda)
 
 torch.save(model, f"saves/model_after_decoding.ptmodel")
 
