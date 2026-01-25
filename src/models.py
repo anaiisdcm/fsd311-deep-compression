@@ -1,5 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.models as models
+from torchvision.models import AlexNet_Weights
 
 from .prune import PruningModule, MaskedLinear
 
@@ -51,4 +53,33 @@ class LeNet_5(PruningModule):
         x = self.fc2(x)
         x = F.log_softmax(x, dim=1)
 
+        return x
+
+class AlexNet(PruningModule):
+    def __init__(self, mask=False, pretrained=True):
+        super().__init__()
+
+        weights = AlexNet_Weights.IMAGENET1K_V1 if pretrained else None
+        base_model = models.alexnet(weights=weights)
+
+        self.features = base_model.features
+        self.avgpool = base_model.avgpool
+
+        linear = MaskedLinear if mask else nn.Linear
+
+        self.classifier = nn.Sequential(
+            linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            linear(4096, 200), # 200 au lieu de 1000 pour tiny-image-net-200
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
         return x

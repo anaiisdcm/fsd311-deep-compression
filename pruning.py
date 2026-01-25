@@ -9,7 +9,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
-from src.models import LeNet
+from src.models import LeNet, AlexNet
 from src.quantization import apply_weight_sharing
 import src.util
 
@@ -17,6 +17,8 @@ os.makedirs('saves', exist_ok=True)
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST pruning from deep compression paper')
+parser.add_argument('--model', type=str, default='LeNet', metavar='MODELNAME',
+                    help='model to compress (default: LeNet)')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='input batch size for training (default: 50)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
@@ -49,25 +51,68 @@ if use_cuda:
 else:
     print('Not using CUDA!!!')
 
+MODELNAME = args.model
+
 # Loader
+mean = {'LeNet' : (0.1307,),
+        'AlexNet' : [0.485, 0.456, 0.406]}
+std  = {'LeNet' : (0.3081,),
+        'AlexNet' : [0.229, 0.224, 0.225]}
 kwargs = {'num_workers': 5, 'pin_memory': True} if use_cuda else {}
-train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('data', train=True, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ])),
-    batch_size=args.batch_size, shuffle=True, **kwargs)
-test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('data', train=False, transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ])),
-    batch_size=args.test_batch_size, shuffle=False, **kwargs)
+if MODELNAME == 'LeNet':
+    train_loader = torch.utils.data.DataLoader(
+        datasets.MNIST('data', train=True, download=True,
+                    transform=transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean['LeNet'], std['LeNet'])
+                    ])),
+        batch_size=args.batch_size, shuffle=True, **kwargs)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.MNIST('data', train=False, transform=transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean['LeNet'], std['LeNet'])
+                    ])),
+        batch_size=args.test_batch_size, shuffle=False, **kwargs)
+elif MODELNAME=='AlexNet':
+    train_transforms = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean['AlexNet'], std['AlexNet']),
+    ])
+    test_transforms = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean['AlexNet'], std['AlexNet']),
+    ])
+
+    train_loader = torch.utils.data.DataLoader(
+        datasets.ImageFolder(
+            root='data/tiny-imagenet-200/train',
+            transform=train_transforms
+        ),
+        batch_size=args.batch_size,
+        shuffle=True,
+        **kwargs
+    )
+    test_loader = torch.utils.data.DataLoader(
+        datasets.ImageFolder(
+            root='data/tiny-imagenet-200/val',
+            transform=test_transforms
+        ),
+        batch_size=args.test_batch_size,
+        shuffle=False,
+        **kwargs
+    )
+
 
 
 # Define which model to use
-model = LeNet(mask=True).to(device)
+if MODELNAME == 'LeNet':
+    model = LeNet(mask=True).to(device)
+elif MODELNAME=='AlexNet':
+    model = AlexNet(mask=True, pretrained=True).to(device)
 
 print(model)
 src.util.print_model_parameters(model)
@@ -84,7 +129,10 @@ def train(epochs):
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
             output = model(data)
-            loss = F.nll_loss(output, target)
+            if MODELNAME=="LeNet":
+                loss = F.nll_loss(output, target)
+            elif MODELNAME=='AlexNet':
+                loss = F.cross_entropy(output, target)
             loss.backward()
 
             # zero-out all the gradients corresponding to the pruned connections
@@ -111,7 +159,10 @@ def test():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
+            if MODELNAME=="LeNet":
+                test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
+            elif MODELNAME=='AlexNet':
+                test_loss += F.cross_entropy(output, target, reduction='sum').item()
             pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).sum().item()
 

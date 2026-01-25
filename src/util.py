@@ -36,15 +36,38 @@ def print_nonzeros(model):
     print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
 
 
-def test(model, use_cuda=True):
+def test(model, modelname, use_cuda=True):
     kwargs = {'num_workers': 5, 'pin_memory': True} if use_cuda else {}
     device = torch.device("cuda" if use_cuda else 'cpu')
-    test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('data', train=False, transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ])),
-    batch_size=1000, shuffle=False, **kwargs)
+
+    mean = {'LeNet' : (0.1307,),
+            'AlexNet' : [0.485, 0.456, 0.406]}
+    std  = {'LeNet' : (0.3081,),
+            'AlexNet' : [0.229, 0.224, 0.225]}
+    if modelname == 'LeNet':
+        test_loader = torch.utils.data.DataLoader(
+            datasets.MNIST('data', train=False, transform=transforms.Compose([
+                            transforms.ToTensor(),
+                            transforms.Normalize(mean['LeNet'], std['LeNet'])
+                        ])),
+            batch_size=1000, shuffle=False, **kwargs)
+    elif modelname=='AlexNet':
+        test_transforms = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean['AlexNet'], std['AlexNet']),
+        ])
+        test_loader = torch.utils.data.DataLoader(
+            datasets.ImageFolder(
+                root='data/tiny-imagenet-200/val',
+                transform=test_transforms
+            ),
+            batch_size=256,
+            shuffle=False,
+            **kwargs
+        )
+    
     model.eval()
     test_loss = 0
     correct = 0
@@ -52,7 +75,10 @@ def test(model, use_cuda=True):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
+            if modelname=="LeNet":
+                test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
+            elif modelname=='AlexNet':
+                test_loss += F.cross_entropy(output, target, reduction='sum').item()
             pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).sum().item()
 
