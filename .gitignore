@@ -3,5 +3,5 @@ data/
 saves/
 encodings/
 log.txt
-LeNet*
+LeNet_*
 tiny-imagenet-200.zip

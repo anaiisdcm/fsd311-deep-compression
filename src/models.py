@@ -83,3 +83,19 @@ class AlexNet(PruningModule):
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
+    
+
+class MiniLeNet(PruningModule):
+    def __init__(self, mask=False):
+        super(MiniLeNet, self).__init__()
+        linear = MaskedLinear if mask else nn.Linear
+        self.fc1 = linear(784, 8)
+        self.fc2 = linear(8, 8)
+        self.fc3 = linear(8, 10)
+
+    def forward(self, x):
+        x = x.view(-1, 784)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.log_softmax(self.fc3(x), dim=1)
+        return x
