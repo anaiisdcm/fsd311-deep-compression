@@ -266,5 +266,5 @@ def huffman_decode_model(model, directory='encodings/'):
             param.data = torch.from_numpy(mat.toarray()).to(dev)
         else:
             dev = param.device
-            bias = np.load(directory+'/'+name)
+            bias = np.load(directory+'/'+name, allow_pickle=True)
             param.data = torch.from_numpy(bias).to(dev)
