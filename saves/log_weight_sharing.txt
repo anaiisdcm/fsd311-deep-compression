@@ -1,0 +1,5 @@
+Before weight sharing
+Test set: Average loss: 0.1196, Accuracy: 9655/10000 (96.55%)
+
+After weight sharing
+Test set: Average loss: 0.1209, Accuracy: 9648/10000 (96.48%)

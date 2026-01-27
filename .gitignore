@@ -1,7 +1,6 @@
 __pycache__/
 data/
-saves/
-encodings/
+# saves/
+# encodings/
 log.txt
-LeNet_*
-tiny-imagenet-200.zip
+# tiny-imagenet-200.zip

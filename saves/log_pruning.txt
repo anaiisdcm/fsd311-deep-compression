@@ -1,0 +1,32 @@
+--- Initial training ---
+Test set: Average loss: 0.2246, Accuracy: 9413/10000 (94.13%)
+--- Before pruning ---
+fc1.weight           | nonzeros =  235200 /  235200 (100.00%) | total_pruned =       0 | shape = (300, 784)
+fc1.bias             | nonzeros =     300 /     300 (100.00%) | total_pruned =       0 | shape = (300,)
+fc2.weight           | nonzeros =   30000 /   30000 (100.00%) | total_pruned =       0 | shape = (100, 300)
+fc2.bias             | nonzeros =     100 /     100 (100.00%) | total_pruned =       0 | shape = (100,)
+fc3.weight           | nonzeros =    1000 /    1000 (100.00%) | total_pruned =       0 | shape = (10, 100)
+fc3.bias             | nonzeros =      10 /      10 (100.00%) | total_pruned =       0 | shape = (10,)
+alive: 266610, pruned : 0, total: 266610, Compression rate :       1.00x  (  0.00% pruned)
+Pruning with threshold : 0.22580434381961823 for layer fc1
+Pruning with threshold : 0.19193808734416962 for layer fc2
+Pruning with threshold : 0.23468603193759918 for layer fc3
+Test set: Average loss: 2.0912, Accuracy: 5731/10000 (57.31%)
+--- After pruning ---
+fc1.weight           | nonzeros =   10005 /  235200 (  4.25%) | total_pruned =  225195 | shape = (300, 784)
+fc1.bias             | nonzeros =     300 /     300 (100.00%) | total_pruned =       0 | shape = (300,)
+fc2.weight           | nonzeros =    1432 /   30000 (  4.77%) | total_pruned =   28568 | shape = (100, 300)
+fc2.bias             | nonzeros =     100 /     100 (100.00%) | total_pruned =       0 | shape = (100,)
+fc3.weight           | nonzeros =      81 /    1000 (  8.10%) | total_pruned =     919 | shape = (10, 100)
+fc3.bias             | nonzeros =      10 /      10 (100.00%) | total_pruned =       0 | shape = (10,)
+alive: 11928, pruned : 254682, total: 266610, Compression rate :      22.35x  ( 95.53% pruned)
+--- Retraining ---
+Test set: Average loss: 0.1196, Accuracy: 9655/10000 (96.55%)
+--- After Retraining ---
+fc1.weight           | nonzeros =   10005 /  235200 (  4.25%) | total_pruned =  225195 | shape = (300, 784)
+fc1.bias             | nonzeros =     300 /     300 (100.00%) | total_pruned =       0 | shape = (300,)
+fc2.weight           | nonzeros =    1432 /   30000 (  4.77%) | total_pruned =   28568 | shape = (100, 300)
+fc2.bias             | nonzeros =     100 /     100 (100.00%) | total_pruned =       0 | shape = (100,)
+fc3.weight           | nonzeros =      81 /    1000 (  8.10%) | total_pruned =     919 | shape = (10, 100)
+fc3.bias             | nonzeros =      10 /      10 (100.00%) | total_pruned =       0 | shape = (10,)
+alive: 11928, pruned : 254682, total: 266610, Compression rate :      22.35x  ( 95.53% pruned)
