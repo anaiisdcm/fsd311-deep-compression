@@ -1,4 +1,7 @@
 # Deep-Compression-PyTorch
+
+https://github.com/mightydeveloper/Deep-Compression-PyTorch
+
 PyTorch implementation of 'Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding'  by Song Han, Huizi Mao, William J. Dally
 
 This implementation implements three core methods in the paper - Deep Compression
